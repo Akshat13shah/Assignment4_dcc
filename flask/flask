@@ -1,0 +1,88 @@
+from flask import Flask, redirect, url_for, request, Response, render_template
+from flask_mysqldb import MySQL
+
+
+
+app = Flask(__name__)
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'Akshat13'
+app.config['MYSQL_DB'] = 'a4'
+
+mysql = MySQL(app)
+
+@app.route('/')
+def home():
+     return render_template("index.html")
+
+@app.route('/bond_number', methods = ["POST", "GET"])
+def bond_number():
+    cur=mysql.connection.cursor()
+    if request.method=="POST":  
+        result=request.form
+        bond_number=result["Bond Number"]
+        cur.execute("SELECT * FROM eb_redemption_details WHERE bond_no=%s",(bond_number,))
+    fetchdata=cur.fetchone()
+    cur.close()
+    return render_template("bond_number.html", data=fetchdata)
+
+@app.route('/company', methods = ["POST", "GET"])
+def company():
+    cur=mysql.connection.cursor()
+    if request.method=="POST":  
+        result=request.form
+        company=result["Company/Individual Name"]
+        cur.execute("SELECT Denominations FROM eb_purchase_details WHERE Name_of_the_Purchaser=%s",(company,))
+        fetchdata=cur.fetchall()
+        bonds_per_year=[]
+        for i in range(2018,2025):
+            cur.execute("SELECT Denominations FROM eb_purchase_details WHERE Name_of_the_Purchaser=%s and journal_date LIKE %s",(company,str(i)))  
+            data2=cur.fetchall()
+            row2=len(data2)
+            bonds_per_year.append(row2)
+    rows=len(fetchdata)
+    
+    total=0
+    for i in fetchdata:
+        for j in i:
+            total+=j
+    cur.close()        
+    return render_template("bonds.html",rows=rows,data=total,bonds_per_year=bonds_per_year )
+# ,bonds_per_year=bonds_per_year,y_axis=y_axis,data2=data2,bonds=bonds,rows2=rows2
+@app.route('/political_party', methods = ["POST", "GET"])
+def political_party():
+    cur=mysql.connection.cursor()
+    if request.method=="POST":  
+        result=request.form
+        political_party=result["Political Party Name"]
+        cur.execute("SELECT Denominations FROM eb_redemption_details WHERE Nane_of_political_party=%s",(political_party,))
+    fetchdata=cur.fetchall()
+    rows=len(fetchdata)
+    cur.close()
+    sum=0
+    for i in fetchdata:
+        for j in i:
+            sum+=j
+    return render_template("political_party.html", rows=rows,data=sum)
+
+@app.route('/pp_company', methods = ["POST", "GET"])
+def pp_company():
+    cur=mysql.connection.cursor()
+    if request.method=="POST":  
+        result=request.form
+        political_party=result["Political Party Name"]
+        cur.execute("SELECT Bond_no FROM eb_redemption_details WHERE Nane_of_political_party=%s",(political_party,))
+        fetchdata=cur.fetchall()
+        
+    data=cur.fetchall()
+    cur.execute("SELECT Name_of_the_Purchaser FROM eb_purchase_details WHERE Bond_number=%s",(fetchdata))
+    return render_template("pp_company.html",data=data)
+
+
+
+
+
+
+
+if __name__ == '__main__':
+   app.run(debug = True) 
