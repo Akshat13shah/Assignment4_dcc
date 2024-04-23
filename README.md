@@ -1,4 +1,4 @@
-Firstly you can see the data in pdf and .csv format in project format.
+Firstly you can see the data in pdf and .csv format in project folder.
 a4 folder contain csv and ibd format file.
 then you can download it from there and upload in it mysql.
 Then you can see the code an template in flask folder and you can access it from there.
